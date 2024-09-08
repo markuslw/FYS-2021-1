@@ -1,5 +1,6 @@
 import pandas
 import numpy as np
+import math
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
@@ -33,35 +34,32 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, stratif
 
 # logistic function (sigmoid) [slide 24 pdf 4]
 def logistic_func(z):
-    return 1 / (1 + np.exp(-z))
+    return 1 / (1 + math.exp(-z)) # overflow with np.exp()
 
 # loss function (cross entropy loss) [slide 29 pdf 4]
 def loss_func(y, y_hat):
-    # avoid log(0) or something (i got some errors before)
-    epsilon = 1e-15
-    y_hat = np.clip(y_hat, epsilon, 1 - epsilon)
-    
     return -np.mean(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
 
 # accuracy function
 def accuracy_func(y, y_hat):
     y_hat_class = (y_hat >= 0.5).astype(int)
-    return np.mean(y_hat_class == y)
+    accuracy = np.mean(y_hat_class == y)
+    return accuracy
 
 # logistic regression using stochastic gradient descent [slide 36 pdf 4]
-def logistic_regression_sgd(x_train, y_train, learning_rate=0.01, epochs=100):
+def logistic_regression_sgd(x_train, y_train, learning_rate, epochs):
     n_samples, n_features = x_train.shape
     weights = np.zeros(n_features)
     bias = 0
     losses = []
 
-    # training loop
+    # training loop (based off earlier experience in INF-1600 and slide 36 pseudo)
     for epoch in range(epochs):
         for i in range(n_samples):
-            z = np.dot(x_train[i], weights) + bias
+            z = np.dot(x_train[i], weights) + bias # instead of manual calculation
             y_hat = logistic_func(z)
 
-            # gradients
+            # gradient of the loss with respect to the weights and bias
             dw = (y_hat - y_train[i]) * x_train[i] # [slide 12 pdf 5]
             db = y_hat - y_train[i]
 
@@ -69,16 +67,14 @@ def logistic_regression_sgd(x_train, y_train, learning_rate=0.01, epochs=100):
             weights -= learning_rate * dw # [slide 8 pdf 5]
             bias -= learning_rate * db
 
-        # loss function
-        y_hat_all = logistic_func(np.dot(x_train, weights) + bias)
-        loss = loss_func(y_train, y_hat_all)
-        losses.append(loss)
+            # loss function 
+            loss = loss_func(y_train[i], y_hat)
+            losses.append(loss)
 
     return weights, bias, losses
 
 learning_rates = [0.001, 0.01, 0.1]
 loss_dict = {}
-
 for rates in learning_rates:
     weights, bias, losses = logistic_regression_sgd(x_train, y_train, learning_rate=rates, epochs=100)
     loss_dict[rates] = losses
@@ -98,8 +94,9 @@ plt.legend()
 plt.show()
 
 # testing set and print accuracy
-y_hat_test = logistic_func(np.dot(x_test, weights) + bias)
-test_accuracy = accuracy_func(y_test, y_hat_test)
+z = np.dot(x_test, weights) + bias
+y_hat = logistic_func(z)
+test_accuracy = accuracy_func(y_test, y_hat)
 print(f"Test Accuracy: {test_accuracy * 100:.2f}%")
 
 # TASK THREE
