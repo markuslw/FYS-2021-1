@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 
 df = pandas.read_csv("SpotifyFeatures.csv") # load csv
 
-df_filtered = df[df['genre'].isin(["Pop", "Classical"])].copy() # copy a filter of pop and classical genre
+# copy a filter of pop and classical genre
+df_filtered = df[df['genre'].isin(["Pop", "Classical"])].copy()
 
 # create a new column "label" which marks the values pop and classical
 df_filtered['label'] = np.where(df_filtered['genre'] == 'Pop', 1, 0)
@@ -32,30 +33,41 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, stratif
 
 # TASK TWO
 
-# logistic function (sigmoid) [slide 24 pdf 4]
+'''
+    logistic function (sigmoid)
+    [slide 24 pdf 4]
+'''
 def logistic_func(z):
     return 1 / (1 + math.exp(-z)) # overflow with np.exp()
 
-# loss function (cross entropy loss) [slide 29 pdf 4]
+'''
+    loss function (cross entropy loss)
+    [slide 29 pdf 4]
+'''
 def loss_func(y, y_hat):
     return -np.mean(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
 
-# accuracy function
+'''
+    accuracy function
+'''
 def accuracy_func(y, y_hat):
     y_hat_class = (y_hat >= 0.5).astype(int)
     accuracy = np.mean(y_hat_class == y)
     return accuracy
 
-# logistic regression using stochastic gradient descent [slide 36 pdf 4]
+'''
+    logistic regression using stochastic gradient descent
+    [slide 36 pdf 4]
+'''
 def logistic_regression_sgd(x_train, y_train, learning_rate, epochs):
-    n_samples, n_features = x_train.shape
-    weights = np.zeros(n_features)
+    num_samples, num_features = x_train.shape
+    weights = np.zeros(num_features)
     bias = 0
     losses = []
 
     # training loop (based off earlier experience in INF-1600 and slide 36 pseudo)
     for epoch in range(epochs):
-        for i in range(n_samples):
+        for i in range(num_samples):
             z = np.dot(x_train[i], weights) + bias # instead of manual calculation
             y_hat = logistic_func(z)
 
@@ -80,7 +92,8 @@ for rates in learning_rates:
     loss_dict[rates] = losses
 
     # calculate accuracy on the training set
-    y_hat_train = logistic_func(np.dot(x_train, weights) + bias)
+    z = np.dot(x_train, weights) + bias
+    y_hat_train = logistic_func(z)
     train_accuracy = accuracy_func(y_train, y_hat_train)
     print(f"[{rates}] Training Accuracy: {train_accuracy * 100:.2f}%")
 
